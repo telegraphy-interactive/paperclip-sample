@@ -39,6 +39,15 @@ We start by bootstrapping a Rails 4 app according to
 [Getting Started With Rails](http://guides.rubyonrails.org/getting_started.html)
 Find the version in use documented in the Gemfile.
 
+The tag, 'hello-rails' has the basic Rails installation with the hello page.
+This is the state of the code base after Section 4 of the getting started guide.
+
+The tag, 'articles-crud' has the Articles CRUD application developed in Section 5
+of the guide.
+We followed it pretty closely, only:
+- we used a fancy `:title` content helper.
+- we didn't use tables
+
 
 ## A note about the license
 

@@ -1,0 +1,13 @@
+<% title(@article.title) %>
+
+<p><%= @article.text %></p>
+
+<ul class='navigation'>
+<li><%= link_to 'Edit this', edit_article_path(@article) %></li>
+<li><%= link_to 'Delete this', article_path(@article),
+              method: :delete,
+              data: { confirm: 'It will be gone.  Irrevocably.  Irretrievably.' } %>
+</li>
+<li><%= link_to 'Article list', articles_path %></li>
+</ul>
+
