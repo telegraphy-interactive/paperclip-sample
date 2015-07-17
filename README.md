@@ -27,7 +27,7 @@ rails generate rspec:install
 
 We're not using RDoc, either.  But perhaps we ought to.
 
-Note that before we write a line of code we have forty Gemfile
+Note that before we write a line of code we have sixty Gemfile
 dependencies, plus Rubygems, Bundler, and Ruby itself.
 And that's just the ship, riding on the ocean.
 We stand on the shoulders of giants.
