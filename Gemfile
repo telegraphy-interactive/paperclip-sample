@@ -41,3 +41,10 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.0'
 end
 
+group :test do
+  gem 'database_cleaner'
+  gem 'forgery'
+  gem 'capybara'
+  gem 'launchy'
+  gem 'capybara-webkit'
+end
