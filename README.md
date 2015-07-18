@@ -64,7 +64,7 @@ That looks ugly.  It's especially troublesome when you try interacting
 with the delete link for that "phantom" comment.  Ugh.  Not pretty.
 
 
-### Embedded Form for Aggregated Content
+### Improving the form for adding article comments
 
 We have an aggregate relation from Article to Comment.  A single article can aggregate many comments.
 We have a form on an article that edits a new comment.
