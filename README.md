@@ -152,6 +152,24 @@ this setup on the form, `app/views/comments/_form.html.erb`:
   </p>
 <% end %>
 ```
+
+The second key is the controller, which must allow the nested attributes for assignment,
+`app/controllers/articles_controller.rb`:
+```
+class ArticlesController < ApplicationController
+
+# .... controller methods omitted
+
+private
+
+  def article_params
+    params.require(:article).permit(
+        :title, :text, comments_attributes: [ :commenter, :body ] )
+  end
+
+end
+```
+
 When we succeed, the test log shows,
 ```
 Started PATCH "/articles/1" for 127.0.0.1 at 2015-07-18 16:19:53 -0600
