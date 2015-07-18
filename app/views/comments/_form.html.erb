@@ -1,13 +1,15 @@
-<%= form_for([@article, @article.comments.build]) do |f| %>
+<%= form_for @article do |article_form| %>
+  <%= article_form.fields_for(:comments, Comment.new) do |comment_fields| %>
   <p>
-    <%= f.label :commenter %><br>
-    <%= f.text_field :commenter %>
+    <%= comment_fields.label :commenter %><br>
+    <%= comment_fields.text_field :commenter %>
   </p>
   <p>
-    <%= f.label :body %><br>
-    <%= f.text_area :body %>
+    <%= comment_fields.label :body %><br>
+    <%= comment_fields.text_area :body %>
   </p>
+<% end %>
   <p>
-    <%= f.submit %>
+    <%= article_form.submit 'Save comment' %>
   </p>
 <% end %>
