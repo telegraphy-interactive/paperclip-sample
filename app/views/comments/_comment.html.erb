@@ -1,0 +1,9 @@
+<div class='comment'>
+  <p><%= comment.commenter %> says, <%= comment.body %></p>
+  <ul>
+    <li><%= link_to 'Delete this comment', [comment.article, comment],
+                 method: :delete,
+                 data: { confirm: 'Yeah. This comment will be gone. Forever. Not even history.' } %>
+    </li>
+  </ul>
+</div>

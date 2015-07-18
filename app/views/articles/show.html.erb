@@ -11,3 +11,10 @@
 <li><%= link_to 'Article list', articles_path %></li>
 </ul>
 
+<h2>Add a comment:</h2>
+<%= render 'comments/form' %>
+
+<% if @article.comments %>
+  <h2>Comments</h2>
+  <%= render @article.comments %>
+<% end %>

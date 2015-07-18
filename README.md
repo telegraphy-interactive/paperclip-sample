@@ -48,11 +48,19 @@ We followed it pretty closely, only:
 - we used a fancy `:title` content helper.
 - we didn't use tables
 
+The tag, 'one-to-many' has the comment model developed in Sections 6, 7 and 8.
+We put the comment form ahead of the list of comments on the article show view.
+As a consequence, the comments list always has the blank comment built,
+but not saved, by the comment form.
+That looks ugly.  It's especially troublesome when you try interacting
+with the delete link for that "phantom" comment.  Ugh.  Not pretty.
+
 
 ## A note about the license
 
-This is on a Creative Commons license so you can copy, paste and modify any 
-part of this code without attribution.  That seems reasonable for sample code that
+This is on a Creative Commons "CC0 1.0 Universal" license so you can copy, 
+paste and modify any part of this code without attribution.  
+That seems reasonable for sample code that
 most would use in precisely that way.
 
 However, taking a wholesale copy and representing it as your own work would be
