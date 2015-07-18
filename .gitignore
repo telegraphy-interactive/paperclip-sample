@@ -33,5 +33,4 @@ bower.json
 
 # Ignore pow environment settings
 .powenv
-# Ignore binstubs bin directory
-/bin
+
