@@ -2,6 +2,8 @@
 
 <p><%= @article.text %></p>
 
+<%= render @article.attachments %>
+
 <ul class='navigation'>
 <li><%= link_to 'Edit this', edit_article_path(@article) %></li>
 <li><%= link_to 'Delete this', article_path(@article),

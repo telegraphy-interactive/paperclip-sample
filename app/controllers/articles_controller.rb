@@ -45,7 +45,10 @@ private
 
   def article_params
     params.require(:article).permit(
-        :title, :text, comments_attributes: [ :commenter, :body ] )
+        :title, :text,
+        comments_attributes: [ :commenter, :body ],
+        attachments_attributes: [ :image, :caption ]
+    )
   end
 
 end

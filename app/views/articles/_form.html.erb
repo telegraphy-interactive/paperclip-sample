@@ -12,7 +12,7 @@
   </div>
 <% end %>
 
-<%= form_for @article do |f| %>
+<%= form_for @article, :html => { :multipart => true } do |f| %>
   <p>
     <%= f.label :title %><br>
     <%= f.text_field :title %>
@@ -22,8 +22,20 @@
     <%= f.label :text %><br>
     <%= f.text_area :text %>
   </p>
- 
+
+  <%= f.fields_for(:attachments, Attachment.new) do |attachment_fields| %>
+    <p>
+      <%= attachment_fields.label :image %><br>
+      <%= attachment_fields.file_field :image %>
+    </p>
+    <p>
+      <%= attachment_fields.label :caption %><br>
+      <%= attachment_fields.text_field :caption %>
+    </p>
+  <% end %>
+
   <p>
     <%= f.submit %>
   </p>
 <% end %>
+
