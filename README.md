@@ -217,9 +217,190 @@ We'll use PaperClip to attach an image to an article.
 
 ### Add an image attachment to an article
 
-We'll just add one image on a one to many model with Article. 
-This is warm-up for adding multiple images.
+We'll add an Attachment model that has 
+one image and a many to one model with Article. 
+One Article has many Attachments.
+We'll do one attachment as warm-up for adding multiple images.
 
+We follow the installation and getting started instructions from Thoughtbot at
+[Paperclip](https://github.com/thoughtbot/paperclip#installation).
+Add the gem to the gemfile and `bundle install`.
+```
+# attachments
+gem 'paperclip', '~> 4.3'
+```
+The 4.3 version of Paperclip has improved checking of the uploaded file
+to ensure that it is an image type of thing (as opposed to mean attacking
+your web site kind of thing).
+
+Rather than adding the image directly to the Article model, we add it to a new model,
+Attachment.  We generate a migration for the new model with:
+```
+rails generate model attachment article:references caption:string image:attachment
+```
+The attachment type comes from Paperclip.
+
+Here is the migration, `db/migrate/20150719005637_create_attachments.rb`:
+
+```
+class CreateAttachments < ActiveRecord::Migration
+  def change
+    create_table :attachments do |t|
+      t.integer :article_id, null: false
+      t.string :caption
+      t.attachment :image
+
+      t.timestamps null: false
+    end
+  end
+end
+```
+
+And we need a test.  The test visits the new article page, attaches an image,
+submits, and checks to see the image present on the article show view.
+We also include a test for adding an image to an existing article.
+`spec/features/article_picture_spec.rb`:
+```
+RSpec::describe Article do
+
+  def valid_image_name
+    'valid_image.jpg'
+  end
+
+  def fill_in_image_form_fields
+    image_file_name = File.join(File.absolute_path('..', File.dirname(__FILE__)), 'resources', valid_image_name)
+    attach_file 'article_attachments_attributes_0_image', image_file_name
+    fill_in 'Caption', with: Forgery(:lorem_ipsum).title
+  end
+
+  it 'new article accepts an image attachment' do
+    visit new_article_path
+    fill_in 'Title', with: Forgery(:lorem_ipsum).title
+    fill_in 'Text', with: Forgery(:lorem_ipsum).sentences
+    fill_in_image_form_fields
+    click_button('Create Article')
+    image = find('img')
+    expect(image[:src]).to have_content(valid_image_name)
+  end
+
+  context 'existing article without picture' do
+    before :example do
+      @article = Article.create(title: Forgery(:lorem_ipsum).title, text: Forgery(:lorem_ipsum).sentences)
+    end
+
+    it 'shows no picture on view' do
+      visit article_path(@article.id)
+      expect { 
+        find('img') 
+      }.to raise_error(Capybara::ElementNotFound)
+    end
+
+    it 'accepts and displays an image on edit' do
+      visit edit_article_path(@article.id)
+      fill_in_image_form_fields
+      click_button('Update Article')
+      image = find('img')
+      expect(image[:src]).to have_content(valid_image_name)
+    end
+  end
+end
+```
+
+The Article model now has many attachments.  We also want to edit the
+attributes for the attachments when editing the article model.
+We set that up by adding these two lines to the Article model file,
+`app/models/article.rb`:
+```
+  has_many :attachments, :dependent => :destroy
+  accepts_nested_attributes_for :attachments, :reject_if => :all_blank, allow_destroy: true
+```
+
+In the good old days we would have added the parameters allowed
+for assignment to the model right there in the model.
+Now the opinion coded into Rails is that this setting belongs in
+the controller.  A downside is making two places to specify the
+nested attributes behavior.  The upside is that the controller has
+control over POST/PUT/PATCH params.
+
+The articles controller must now allow the nested attributes for the
+attachment.  We modified the `article_params` method of 
+`app/controllers/articles_controller.rb` as follows:
+```
+   def article_params
+     params.require(:article).permit(
+         :title, :text,
+         comments_attributes: [ :commenter, :body ],
+         attachments_attributes: [ :image, :caption ]
+     )
+   end
+```
+The `attachments_attributes: [ :image, :caption ]` line is new.
+
+The Attachments model file, `app/models/attachment.rb` specifies a 
+`belongs_to` relationship with Article.  It has the two methods
+needed to set-up Paperclip attachment behavior on the image attribute.
+```
+class Attachment < ActiveRecord::Base
+  belongs_to :article
+
+  has_attached_file :image, :styles => { :large => "1024x1024", :medium => "300x300>", :thumb => "100x100>" }
+
+  validates_attachment_content_type :image, :content_type => /\Aimage\/.*\Z/
+end
+```
+
+The form for editing an article, `app/views/articles/_form.html.erb`
+must now indicate that the data in a POST or PATCH will be "multi-part."
+It will contain normal params data along with binary data read from a
+file, encoded, and forwarded by the browser.  The `form_for` method
+now looks like this:
+```
+<%= form_for @article, :html => { :multipart => true } do |f| %>
+```
+
+Later in the file we add the fields for adding an attachment,
+```
+  <%= f.fields_for(:attachments, Attachment.new) do |attachment_fields| %>
+    <p>
+      <%= attachment_fields.label :image %><br>
+      <%= attachment_fields.file_field :image %>
+    </p>
+    <p>
+      <%= attachment_fields.label :caption %><br>
+      <%= attachment_fields.text_field :caption %>
+    </p>
+  <% end %>
+```
+
+In the view for showing an article,
+`app/views/articles/show.html.erb`,
+we add a line for displaying the attachments:
+```
+<%= render @article.attachments %>
+```
+
+That implies a new view for showing each attachment.
+The place for that file, such that it "Just Works" is,
+`app/views/attachments/_attachment.html.erb`, and here is its
+content:
+```
+<p><%= image_tag attachment.image.url(:medium) %></p>
+```
+Paperclip takes care of the image attribute methods, all of the scaling,
+and the delivery of that url to a medium sized image on our server.
+
+There are a lot of details yet undeveloped:
+- We can't remove the image.
+- We can't change the image, in fact...
+- When we edit an article, the image file selector attaches
+a new image to the article.
+
+The commit that effected the image attachments is 
+[cc204ff](https://github.com/telegraphy-interactive/paperclip-sample/commit/cc204fff0823d8ca246c863446c55e8096199f97).
+We tagged the project here with 'one-attachment-to-article'.
+
+This multiple image behavior is actually behavior we want; so, we're going to roll on with it,
+rather than work to "correct" it.
 
 ### Add multiple images to an article
 Now we need a button to create new forms to 
