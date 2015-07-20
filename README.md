@@ -1,5 +1,17 @@
 # paperclip-sample
-Rails 4 paperclip usage example has record with multiple image attachments
+Rails 4 application with
+[Paperclip](https://github.com/thoughtbot/paperclip)
+demonstrates viewing and editing a record with multiple image attachments.
+
+[The Procedure](#procedure)
+describes in some detail the steps followed 
+to create this application.  That includes sections about:
+- [Using nested attributes](#improving-the-form-for-adding-article-comments)
+to edit a model together with 
+attributes of some of its associated records within a single form.
+- [Attaching an image](#add-an-image-attachment-to-an-article) using Paperclip
+- [Attaching images](#add-multiple-images-to-an-article) on multiple associated records
+
 
 ## The environment
 
@@ -33,12 +45,25 @@ And that's just the ship, riding on the ocean.
 We stand on the shoulders of giants.
 
 Many thanks to [Thoughtbot](https://thoughtbot.com/) 
-for the [PaperClip](https://github.com/thoughtbot/paperclip) gem,
+for the [Paperclip](https://github.com/thoughtbot/paperclip) gem,
 and their [many other contributions](https://github.com/thoughtbot)
 to Rails and open source.
 
 
-## Procedure
+## Trying this out
+
+Assuming you have Git, Ruby, RubyGems, and Bundler installed and working on your system
+(Yes, that's a lot; but, you have to get that far):
+
+* clone this repository with the command, 
+`git clone git@github.com:telegraphy-interactive/paperclip-sample.git`
+* change to the directory, `cd paperclip-sample`
+* install the dependencies with the command, `bundle install`
+* serve the application on your computer with the command, `rails server`
+* steer a web browser on your computer to [http://localhost:3000](http://localhost:3000)
+
+
+## The Procedure
 
 We start by bootstrapping a Rails 4 app according to
 [Getting Started With Rails](http://guides.rubyonrails.org/getting_started.html)
@@ -114,12 +139,8 @@ RSpec::describe Article do
     fill_in 'Commenter', :with => commenter
     fill_in 'Body', :with => Forgery(:lorem_ipsum).sentences
     click_button('Save comment')
-    expect {
-      find(:xpath, '//h2[text()="Comments"]')
-    }.to_not raise_error(Capybara::ElementNotFound)
-    expect {
-      find(:xpath, "//div/p[starts_with(text(),'#{commenter} says,']")
-    }.to_not raise_error(Capybara::ElementNotFound)
+    assert_selector(:xpath, '//h2[text()="Comments"]')
+    assert_selector(:xpath, "//div/p[starts-with(text(),'#{commenter} says,')]")
   end
 end
 ```
@@ -212,7 +233,7 @@ It seems orthogonal to our task of adding image attachments, like a distraction,
 but hang in there.  We'll do something like this again.
 
 Now we'll get to the meat, on task.
-We'll use PaperClip to attach an image to an article.
+We'll use Paperclip to attach an image to an article.
 
 
 ### Add an image attachment to an article
@@ -389,6 +410,59 @@ content:
 Paperclip takes care of the image attribute methods, all of the scaling,
 and the delivery of that url to a medium sized image on our server.
 
+The HTML form rendered for editing a new article looks like this:
+```
+<form class="new_article" id="new_article" enctype="multipart/form-data" action="/articles" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="authenticity_token" value="hTpzNtxi0Ki5pUX2HpWOob20BnRm3FgfHLpBX7PAJft7Xlqz6CwEvvTezQ54P851/KJmEAQo+3RsPi4HCBUPng==" />
+  <p>
+    <label for="article_title">Title</label><br>
+    <input type="text" name="article[title]" id="article_title" />
+  </p>
+ 
+  <p>
+    <label for="article_text">Text</label><br>
+    <textarea name="article[text]" id="article_text">
+</textarea>
+  </p>
+  
+    <p>
+      <label for="article_attachments_attributes_0_image">Image</label><br>
+      <input type="file" name="article[attachments_attributes][0][image]" id="article_attachments_attributes_0_image" />
+    </p>
+    <p>
+      <label for="article_attachments_attributes_0_caption">Caption</label><br>
+      <input type="text" name="article[attachments_attributes][0][caption]" id="article_attachments_attributes_0_caption" />
+    </p>
+
+  <p>
+    <input type="submit" name="commit" value="Create Article" />
+  </p>
+</form>
+```
+
+The POST for a new article with image attachment looks like this (we've added some formatting):
+```
+Started POST "/articles" for 127.0.0.1 at 2015-07-19 16:36:04 -0600
+Processing by ArticlesController#create as HTML
+  Parameters: {
+    "utf8"=>"✓", 
+    "article"=>{
+      "title"=>"Lorem Ipsum Dolor Sit Amet, Consectetuer Adipiscing Elit", 
+        "text"=>"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Proin risus.", 
+        "attachments_attributes"=>{
+          "0"=>{
+            "image"=>#<ActionDispatch::Http::UploadedFile:0x007face9bcd020 
+            @tempfile=#<Tempfile:/var/folders/x0/nv0zmnk52w36xdmngpj9y3240000gn/T/RackMultipart20150719-24623-1jkt1ql.jpg>, 
+            @original_filename="valid_image.jpg", @content_type="image/jpeg", 
+            @headers="Content-Disposition: form-data; name=\"article[attachments_attributes][0][image]\"; 
+              filename=\"valid_image.jpg\"\r\nContent-Type: image/jpeg\r\nContent-Length: 50021\r\n">, 
+            "caption"=>"Lorem Ipsum Dolor Sit Amet, Consectetuer Adipiscing Elit"
+          }
+        }
+      },
+    "commit"=>"Create Article"
+  }
+```
+
 There are a lot of details yet undeveloped:
 - We can't remove the image.
 - We can't change the image, in fact...
@@ -402,11 +476,370 @@ We tagged the project here with 'one-attachment-to-article'.
 This multiple image behavior is actually behavior we want; so, we're going to roll on with it,
 rather than work to "correct" it.
 
+
 ### Add multiple images to an article
-Now we need a button to create new forms to 
+
+From the prior section, "Add an image attachment to an article" we gained Paperclip
+and a model for adding attachments.  We have an Article model in a one-to-many relationship
+with an Attachment model.  The Attachment model has an `image` attribute managed by Paperclip,
+together with a `caption` attribute managed by us.
+
+We add some tests to the article attachments `spec/features/article_picture_spec.rb` for the new behavior:
+- to add multiple images when editing the article
+- to view all of the images
+- to delete any or all of the images when editing the article
+
+#### Testing
+
+The RSpec source for testing the image attachments is getting quite long.
+You can find it at [spec/features/article_picture_spec.rb](https://github.com/telegraphy-interactive/paperclip-sample/blob/master/spec/features/article_picture_spec.rb).
+Here is one of the add image tests:
+```
+  it 'new article accepts multiple image attachments' do
+    start_a_new_article
+    add_image_to_article
+    second_image_name = 'second_image.png'
+    add_image_to_article(second_image_name)
+    click_button('Create Article')
+    assert_selector('img', count: 2)
+    images = all('img')
+    expect(images[0][:src]).to have_content(valid_image_name)
+    expect(images[1][:src]).to have_content(second_image_name)
+  end
+```
+Some say not to upload images during test, but rather to mock create the objects that contain
+image attachments.  The argument is for speed, we suppose.
+We're not having a problem with speed.  The images are small in any case.
+Further, if we don't test the uploads and deletions completely through the UI, then we've added
+a manual task of testing before release; or else, we're testing in production.
+
+#### Strategy
+
+The `fields_for` code we have placed in the article edit form, `app/views/articles/edit.html.erb`
+is just what we need to add or edit an attachment.  The trick now is that we need zero or more
+instances of that code operating on newly created and existing attachments.
+
+We're going to resort to using some unobtrusive JavaScript.  We'll attach the script to a button
+that inserts a new copy of the attachment form whenever we press it.
+Using the button will enable adding an arbitrary number of image attachments to an article
+when editing the article.
+This strategy is taught in a couple of Ryan Bates' Rails screencasts:
 - [Nested Model Form Railscast Part 1](http://railscasts.com/episodes/196-nested-model-form-part-1?view=asciicast)
 - [Nested Model Form Railscast Part 2](http://railscasts.com/episodes/197-nested-model-form-part-2?view=asciicast)
-- [Dynamic forms Railscast (requires subsription)](http://railscasts.com/episodes/403-dynamic-forms?view=asciicast)
+- [Dynamic forms Railscast (requires subscription)](http://railscasts.com/episodes/403-dynamic-forms?view=asciicast)
+
+#### Execution
+
+Let's start at the high level with the form for creating and editing
+articles.  The view code for that is, 
+`app/views/articles/_form.html.erb` (We elide some of the error
+processing code near the top.):
+```
+<% if @article.errors.any? %>
+  ...
+<% end %>
+
+<%= form_for @article, :html => { :multipart => true } do |f| %>
+  <p>
+    <%= f.label :title %><br>
+    <%= f.text_field :title %>
+  </p>
+ 
+  <p>
+    <%= f.label :text %><br>
+    <%= f.text_area :text %>
+  </p>
+
+  <div id='attachments'>
+    <%= render partial: 'attachment_edit', collection: @article.attachments, locals: { builder: f } %>
+  </div>
+
+  <%= link_to_add_fields('Add Image', f, 'attachments') %>
+
+  <p>
+    <%= f.submit %>
+  </p>
+<% end %>
+```
+The form has two important details:
+- It renders the existing associated records within an enclosing
+element, a `div`, with an `id` named with the name of the association.
+- It uses a helper `link_to_add_fields` to render the
+link that will grow the form with fields for a new associated record.
+
+The form uses two partials, one to edit existing attachments, the
+other to create new attachments.  The form renders 
+fields for editing existing attachments with,
+```
+    <%= render partial: 'attachment_edit', collection: @article.attachments, locals: { builder: f } %>
+```
+
+Here is the content of the partial,
+`app/views/articles/_attachment_edit.html.erb`
+```
+<fieldset>
+  <%= builder.fields_for(:attachments, attachment_edit) do |f| %>
+    <p><%= image_tag attachment_edit.image.url(:medium) %></p>
+    <p>
+      <%= f.label :caption %><br>
+      <%= f.text_field :caption %>
+    </p>
+    <p>
+      <%= f.hidden_field :_destroy %>
+      <%= link_to 'Delete image', '#', class: 'remove_fields' %>
+    </p>
+  <% end %>
+</fieldset>
+```
+
+The `render` method will invoke this attachment once for each member
+of the many attachments already associated with the article.
+The partial receives the ActiveRecord model object as variable,
+`attachment_edit`, by convention, the name of the partial.
+
+It proceeds to build the image tag, fields for editing the caption,
+and a link to delete the record.  The call to `render` from
+the form adds the content rendered by this partial directly, in-place
+into the form.
+
+There are some little tricks to note with this partial and its use:
+- The `link_to 'Delete image' ...` near the bottom has a magic class,
+`remove_fields`.  You'll see why.
+- There's a hidden field with name, `_destroy` just before the
+link to delete.
+- The entire partial renders within a `fieldset` element, including
+the link to delete.
+The rest of the content is pretty much up to your need,
+provided the partial satisfies those details.
+
+The second partial used by the form is hidden away in the call
+to `link_to_add_fields`.  We'll look at that call shortly, but first,
+here is the content of the partial that will render.  It is the
+partial inserted into the document to add a new associated record,
+in this case, an attachment. By convention coded into the definition
+of `link_to_add_fields`, it has name,
+`app/views/articles/_attachment_fields.html.erb`:
+```
+<fieldset>
+  <p>
+    <%= f.label :image %><br>
+    <%= f.file_field :image %>
+  </p>
+  <p>
+    <%= f.label :caption %><br>
+    <%= f.text_field :caption %>
+  </p>
+  <p>
+    <%= f.hidden_field :_destroy %>
+    <%= link_to 'Remove', '#', class: 'remove_fields' %>
+  </p>
+</fieldset>
+```
+This partial is so very similar to, and yet different than the
+partial for editing existing associated records.  In some
+applications the two would be the same.
+Most importantly, it also satisfies three very important details:
+- The `link_to 'Delete image' ...` near the bottom has a magic class,
+`remove_fields`.
+- There's a hidden field with name, `_destroy` just before the
+link to delete.
+- The entire partial renders within a `fieldset` element, including
+the link to delete.
+
+Those details are so important, we just told them to you twice.
+
+So now we have looked at the visual elements that go into editing
+existing and new associated records.  A big trick that we haven't
+yet investigated is `link_to_add_fields`.
+
+We need a link that renders form content into the document,
+dynamically, when we activate it.  It more than a line of code
+to accomplish that.  We place it in the view helper available
+to all views in the application, `app/helpers/application_helper.rb`:
+```
+  def link_to_add_fields(name, f, association, button_class=nil, container_id=nil)
+    new_object = f.object.send(association).klass.new
+    id = new_object.object_id
+    fields = f.fields_for(association, new_object, child_index: id) do |builder|
+      render(association.to_s.singularize + "_fields", f: builder)
+    end
+    if container_id == nil
+      container_id = association
+    end
+    container_id_css_spec = '#' + container_id
+    opts = { class: 'add_fields', data: { id: id, container: container_id_css_spec, fields: fields.gsub("\n",'') } }
+    if button_class != nil
+      opts['class'] = "add_fields #{button_class}" 
+    end
+    link_to(name, '#', opts)
+  end
+```
+The `name` parameter is the content of the link that will render
+as a string, visible for clicking.  You see that the method passes
+it along to the `link_to` call at the end.
+
+The rest of the method is all about setting-up the `opts` for `link_to`.
+In particular, the method sets up the `data: {container: }` option
+that has new content rendered into the document.
+
+The `f` parameter is the form builder enclosing the link. It is the `f`
+from, `form_for ... do |f|`.
+
+The `association` parameter is the name of the nested association on
+the object of the enclosing form, `f`.  Take care to name the association
+exactly. The name, `attachment` is not the right name to use if the
+association is the plural, `attachments`.
+
+Reading the code, you can see that it renders content using a
+builder generated by `fields_for`.  This is so clever.  We're using
+the Rails view render method to render new content for a Rails view.
+Only we don't put that content into the document until the user
+asks for it with a click.  So awesome.
+
+More is needed, however.
+
+The following coffescript carries out some trickery for the add
+and delete links. Find it in the JavaScript assets as
+`app/assets/javascripts/nested_forms.js.coffee`
+```
+jQuery ->
+  $(document).on 'click', 'form .remove_fields', (event) ->
+    $(this).prev('input[type=hidden]').val('1')
+    $(this).closest('fieldset').hide()
+    event.preventDefault()
+  $(document).on 'click', 'form .add_fields', (event) ->
+    time = new Date().getTime()
+    regexp = new RegExp($(this).data('id'), 'g')
+    $(this).before($(this).data('fields').replace(regexp, time))
+    event.preventDefault()
+```
+
+The click event handler placed for removing fields does not really
+remove them.  It hides them by hiding the enclosing `fieldset`.
+It also finds the nearest hidden input field prior to itself in the
+document, and sets the value on that field to `1`, or `true`.
+We have arranged to have that hidden input field be the one for
+`_destroy`  With `_destroy` set true, Rails will remove the
+record on the PATCH call.
+
+The click event handler placed for adding fields applies a regexp
+to the content about to be added to the document.  The 
+`link_to_add_fields` method coded a new object id into the
+input fields.  This bit of JavaScript does little more than ensure
+that new object id is unique, by replacing the hard-coded id
+with a dynamic one based on the time.  The time is unique.
+You would have to click pretty fast to foul this scheme!
+
+We think we are done.  It's so exciting.  Yet it doesn't work.
+The Rails protections for mass assignment foil us yet again.
+
+Inside of the controller, `app/controllers/articles_controller.rb`,
+we have to add permission for `_destroy` and `id` attributes
+nested within the article params:
+```
+     params.require(:article).permit(
+         :title, :text,
+         comments_attributes: [ :commenter, :body ],
+         attachments_attributes: [ :image, :caption, :_destroy, :id ]
+     )
+```
+The clue to that was in the log output, where Rails told us that
+it was not permitting them.
+
+#### Recap
+
+Here are the details to look after when setting up the dynamic
+editing of an arbitrary number of members from a one-to-many
+association nested within a form:
+
+- A containing element named after the association.
+- A partial (or two) to render forms for the associated records.
+  - with the fields within a `fieldset`
+  - with a hidden input field named, `_destroy`
+  - with a delete link that has class, `remove_fields`
+- A helper method that outputs an "add record" link
+  - that renders the partial for the associated record into
+  the `data-fields` attribute
+  - that names the containing element in the `data-container`
+  attribute
+  - that sets the name of the placeholder for the new object id
+  in the `data-id` attribute
+- JavaScript methods that decorate the add and delete links
+  - with code to hide the `fieldset` container and set the 
+  value of the `_destroy` input field when delete activated.
+  - with code to replace the placeholder id with a new, unique
+  id within the data-fields rendered into the data-container.
+- Properly enabled nested parameter mass assignment permissions,
+  including the id.
+
+
+#### Pitfalls
+
+##### Turbolinks and JavaScript
+
+Somewhere we picked up code that
+places the on_click events for removing and adding
+fields on new form elements as follows,
+```
+  $('form').on 'click', '.remove_fields', (event) ->
+```
+That worked great in test.  Poking around the browser we found that
+the add and remove buttons worked only on first use after starting
+the server.
+
+What a puzzle!  Reading the Rails Guides section about working
+with JavaScript we find this section about
+[Turbolinks](http://guides.rubyonrails.org/working_with_javascript_in_rails.html#turbolinks),
+with a suggestion about events that run against new pages.
+
+Following the suggestion in the Rails Guide, we rewrote the 
+coffescript for decorating the add and remove links as follows:
+```
+  $(document).on 'click', 'form .remove_fields', (event) ->
+```
+This change enabled the add and remove links to work as well in
+development, and hopefully in production, as well as they did
+in tests.
+
+Looking back, we see now that the newer 
+[Railscast episode #403](http://railscasts.com/episodes/403-dynamic-forms?view=asciicast)
+does code these as `$(document).on 'click'`.
+(That is an episode for which a subscription is needed.)
+
+Turbolinks and asset pipeline do make it necessary to do some
+smoke testing on a production-like server before deploying
+much new code to production.
+
+##### Test database
+
+In the article_pictures feature spec you'll find a context and before
+hook that set-up an existing article.
+```
+  context 'edit existing article' do
+     before :example do
+      start_a_new_article
+      click_button('Create Article')
+```
+When we tried to use the ActiveRecord model to directly create an
+article record, we ran into trouble with the tests.  The tests picked-up
+a missing record exception from ActiveRecord when we tried to visit
+the edit screen for the created model.  Therefore,
+the original code as follows did not work:
+```
+  context 'edit existing article' do
+     before :example do
+      @article = Article.create(title: Forgery(:lorem_ipsum).title, text: Forgery(:lorem_ipsum).sentences)
+```
+
+This problem arose when we switched the Capybara driver from
+the default, `rack_test` to `capybara_webkit`.  The same happened
+when we tried `selenium-webdriver`.  We needed one of these for
+the javascript support; so, we worked around it by driving the
+article record creation through the application.
+
+This is troubling.  If you know the cause, please speak up.
+(Speculation is not the same as knowledge.)
+
 
 ## A note about the license
 
@@ -417,28 +850,11 @@ most would use in precisely that way.
 
 However, taking a wholesale copy and representing it as your own work would be
 reprehensible.  Few people pay respect to a person who has done such a thing.
+In the words of one [very resilient duck](https://en.wikipedia.org/wiki/Daffy_Duck),
+"desthpicable."
 
 If you like, you can provide attribution with a reference to this project, e.g.
 "Learned from telegraphy-interactive/paperclip-sample on GitHub,
 https://github.com/telegraphy-interactive/paperclip-sample"
-
-## Editor's guide from Rails
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
+... or something to that effect.
 
