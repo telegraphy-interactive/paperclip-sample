@@ -1,0 +1,13 @@
+<fieldset>
+  <%= builder.fields_for(:attachments, attachment_edit) do |f| %>
+    <p><%= image_tag attachment_edit.image.url(:medium) %></p>
+    <p>
+      <%= f.label :caption %><br>
+      <%= f.text_field :caption %>
+    </p>
+    <p>
+      <%= f.hidden_field :_destroy %>
+      <%= link_to 'Delete image', '#', class: 'remove_fields' %>
+    </p>
+  <% end %>
+</fieldset>

@@ -1,11 +1,15 @@
 example_id                                           | status  | run_time        |
 ---------------------------------------------------- | ------- | --------------- |
 ./spec/controllers/welcome_controller_spec.rb[1:1:1] | passed  | 0.02283 seconds |
-./spec/features/article_comment_spec.rb[1:1]         | passed  | 0.03588 seconds |
-./spec/features/article_comment_spec.rb[1:2]         | passed  | 0.1038 seconds  |
-./spec/features/article_picture_spec.rb[1:1]         | passed  | 0.72413 seconds |
-./spec/features/article_picture_spec.rb[1:2:1]       | passed  | 0.02119 seconds |
-./spec/features/article_picture_spec.rb[1:2:2]       | passed  | 0.35013 seconds |
+./spec/features/article_comment_spec.rb[1:1]         | passed  | 0.02083 seconds |
+./spec/features/article_comment_spec.rb[1:2]         | passed  | 0.36885 seconds |
+./spec/features/article_picture_spec.rb[1:1]         | passed  | 0.16069 seconds |
+./spec/features/article_picture_spec.rb[1:2]         | passed  | 0.52292 seconds |
+./spec/features/article_picture_spec.rb[1:3]         | passed  | 2.05 seconds    |
+./spec/features/article_picture_spec.rb[1:4:1]       | passed  | 0.83225 seconds |
+./spec/features/article_picture_spec.rb[1:4:2]       | passed  | 1.13 seconds    |
+./spec/features/article_picture_spec.rb[1:4:3]       | passed  | 1.27 seconds    |
+./spec/features/article_picture_spec.rb[1:4:4]       | passed  | 2.81 seconds    |
 ./spec/helpers/articles_helper_spec.rb[1:1]          | pending | 0.00002 seconds |
 ./spec/helpers/comments_helper_spec.rb[1:1]          | pending | 0.00002 seconds |
 ./spec/helpers/welcome_helper_spec.rb[1:1]           | pending | 0.00001 seconds |

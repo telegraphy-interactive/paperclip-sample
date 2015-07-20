@@ -47,7 +47,7 @@ private
     params.require(:article).permit(
         :title, :text,
         comments_attributes: [ :commenter, :body ],
-        attachments_attributes: [ :image, :caption ]
+        attachments_attributes: [ :image, :caption, :_destroy, :id ]
     )
   end
 

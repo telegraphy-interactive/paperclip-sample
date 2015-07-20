@@ -23,16 +23,11 @@
     <%= f.text_area :text %>
   </p>
 
-  <%= f.fields_for(:attachments, Attachment.new) do |attachment_fields| %>
-    <p>
-      <%= attachment_fields.label :image %><br>
-      <%= attachment_fields.file_field :image %>
-    </p>
-    <p>
-      <%= attachment_fields.label :caption %><br>
-      <%= attachment_fields.text_field :caption %>
-    </p>
-  <% end %>
+  <div id='attachments'>
+    <%= render partial: 'attachment_edit', collection: @article.attachments, locals: { builder: f } %>
+  </div>
+
+  <%= link_to_add_fields('Add Image', f, 'attachments') %>
 
   <p>
     <%= f.submit %>
