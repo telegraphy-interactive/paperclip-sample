@@ -15,11 +15,7 @@ RSpec::describe Article do
     fill_in 'Commenter', :with => commenter
     fill_in 'Body', :with => Forgery(:lorem_ipsum).sentences
     click_button('Save comment')
-    expect {
-      find(:xpath, '//h2[text()="Comments"]')
-    }.to_not raise_error(Capybara::ElementNotFound)
-    expect {
-      find(:xpath, "//div/p[starts_with(text(),'#{commenter} says,']")
-    }.to_not raise_error(Capybara::ElementNotFound)
+    assert_selector(:xpath, '//h2[text()="Comments"]')
+    assert_selector(:xpath, "//div/p[starts-with(text(),'#{commenter} says,')]")
   end
 end
