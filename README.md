@@ -1,3 +1,15 @@
+# Deprecated
+
+[Paperclip](https://github.com/thoughtbot/paperclip)
+has deprecated itself and as such this sample project is likewise deprecated.
+Paperclip recommends
+[ActiveStorage](http://guides.rubyonrails.org/active_storage_overview.html)
+as its replacement. Perhaps one day we'll revive this, rename it, and use it
+as an exercise in migrating to ActiveStorage.
+
+For now, please don't use this. It has security vulnerabilites in gem
+dependencies that are not repaired.
+
 # paperclip-sample
 Rails 4 application with
 [Paperclip](https://github.com/thoughtbot/paperclip)
